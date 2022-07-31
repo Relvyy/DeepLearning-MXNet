@@ -19,3 +19,4 @@ if __name__ == '__main__':
     #test('ResNet', 224)
     #show_trace(gd(0.9))
     show_trace_2d(f_2d, train_2d(gd_2d))
+    #show_trace_2d(f_2d, train_2d(sgd_2d))
