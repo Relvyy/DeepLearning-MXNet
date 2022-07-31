@@ -1,4 +1,5 @@
 from tools.tools import *
+from tools.optimal import *
 from model.model_zoo import *
 
 
@@ -15,4 +16,6 @@ def test(model_string, r):
 
 
 if __name__ == '__main__':
-    test('ResNet', 224)
+    #test('ResNet', 224)
+    #show_trace(gd(0.9))
+    show_trace_2d(f_2d, train_2d(gd_2d))

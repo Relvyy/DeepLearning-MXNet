@@ -1,7 +1,9 @@
 import os
 import sys
 import time
+import numpy as np
 import mxnet as mx
+from IPython import display
 from matplotlib import pyplot as plt
 from mxnet.gluon import nn, loss as gloss, data as gdata
 from mxnet import nd, autograd, gluon, init
@@ -81,4 +83,25 @@ class Tools():
         if os.path.exists(filename):
             os.remove(filename)
         net.save_parameters(filename)
+
+def show_trace(res):
+    n = max(abs(min(res)), abs(max(res)), 10)
+    f_line = np.arange(-n, n, 0.1)
+    display.set_matplotlib_formats('svg')
+    plt.rcParams['figure.figsize'] = (3.5, 2.5)
+    plt.plot(f_line, [x * x for x in f_line])
+    plt.plot(res, [x * x for x in res], '-o')
+    plt.xlabel('x')
+    plt.ylabel('f(x)')
+
+    plt.show()
+
+def show_trace_2d(f, results):
+    plt.plot(*zip(*results), '-o', color='#ff7f0e')
+    x1, x2 = np.meshgrid(np.arange(-5.5, 1.0, 0.1), np.arange(-3.0, 1.0, 0.1))
+    plt.contour(x1, x2, f(x1, x2), colors='#1f77b4')
+    plt.xlabel('x1')
+    plt.ylabel('x2')
+
+    plt.show()
 
