@@ -1,5 +1,5 @@
 from model.model_zoo import *
-from tools import *
+from tools.tools import *
 
 
 class Train():

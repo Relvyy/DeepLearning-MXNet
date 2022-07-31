@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from mxnet.gluon import nn, loss as gloss, data as gdata
 from mxnet import nd, autograd, gluon, init
 
+
 class Tools():
     def __init__(self, **kwargs):
         super(Tools).__init__(**kwargs)
@@ -15,7 +16,7 @@ class Tools():
         try:
             if mx.__version__.find('gpu'):
                 ctx = mx.gpu()
-                _ = nd.array((1, ), ctx=ctx)
+                _ = nd.array((1,), ctx=ctx)
             else:
                 raise Exception('The Machine don''t  have gpu!')
         except mx.base.MXNetError:
@@ -29,8 +30,8 @@ class Tools():
             accu_sum += (net(X).argmax(axis=1) == y).sum()
             n += y.size
         return accu_sum.asscalar() / n
-		
-    def load_data_fashion_mnist(self, resize):#, root=os.path.join('~', '.mxnet', 'datasets', 'fashion-mnist')):
+
+    def load_data_fashion_mnist(self, resize):  # , root=os.path.join('~', '.mxnet', 'datasets', 'fashion-mnist')):
         r = os.getcwd()
         root = os.path.join(r, 'Datasets', 'fashion-mnist')
         root = os.path.expanduser(root)
@@ -42,10 +43,13 @@ class Tools():
         mnist_train = gdata.vision.FashionMNIST(root=root, train=True)
         mnist_test = gdata.vision.FashionMNIST(root=root, train=False)
         num_workers = 0 if sys.platform.endswith('win') else 4
-        train_iter = gdata.DataLoader(mnist_train.transform_first(transformer), self.batch_size, shuffle=True, num_workers=num_workers)
-        test_iter = gdata.DataLoader(mnist_test.transform_first(transformer), self.batch_size, shuffle=True, num_workers=num_workers)
+        train_iter = gdata.DataLoader(mnist_train.transform_first(transformer), self.batch_size, shuffle=True,
+                                      num_workers=num_workers)
+        test_iter = gdata.DataLoader(mnist_test.transform_first(transformer), self.batch_size, shuffle=True,
+                                     num_workers=num_workers)
 
         return train_iter, test_iter
+
     def get_fashion_mnist_labels(self, labels):
         text_labels = ['T-Shirt', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal',
                        'Shirt', 'Sneaker', 'Bag', 'Ankle Boot']
@@ -58,12 +62,13 @@ class Tools():
             f.set_title(lab, color=col)
             f.axes.get_xaxis().set_visible(False)
             f.axes.get_yaxis().set_visible(False)
+
     def test(self, net, test_iter, r):
         for X, y in test_iter:
             true_labels = self.get_fashion_mnist_labels(y.asnumpy())
             pred_labels = self.get_fashion_mnist_labels(net(X).argmax(axis=1).asnumpy())
 
-            titles = ['T:'+true + '\n' + 'P:'+pred for true, pred in zip(true_labels, pred_labels)]
+            titles = ['T:' + true + '\n' + 'P:' + pred for true, pred in zip(true_labels, pred_labels)]
             color = ['g' if pred == true else 'r' for true, pred in zip(true_labels, pred_labels)]
             self.show_fashion_mnist(X[0:9], titles[0:9], color[0:9], r)
             break
@@ -76,4 +81,4 @@ class Tools():
         if os.path.exists(filename):
             os.remove(filename)
         net.save_parameters(filename)
-				
+
