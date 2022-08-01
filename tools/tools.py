@@ -98,7 +98,7 @@ def show_trace(res):
 
 def show_trace_2d(f, results):
     plt.plot(*zip(*results), '-o', color='#ff7f0e')
-    x1, x2 = np.meshgrid(np.arange(-5.5, 1.0, 0.1), np.arange(-3.0, 1.0, 0.1))
+    x1, x2 = np.meshgrid(np.arange(-10, 10, 0.05), np.arange(-5.0, 5.0, 0.05))
     plt.contour(x1, x2, f(x1, x2), colors='#1f77b4')
     plt.xlabel('x1')
     plt.ylabel('x2')
