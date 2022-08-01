@@ -34,3 +34,9 @@ def gd_2d(x1, x2, s1, s2, eta=0.15):
 def sgd_2d(x1, x2, s1, s2, eta=0.15):
     return x1 - eta * (2 * x1 + np.random.normal(0.1)), \
            x2 - eta * (4 * x2 + np.random.normal(0.1)), 0, 0
+
+
+def sgd(params, states, hyperparams):
+    for p in params:
+        p[:] -= hyperparams['lr'] * p.grad
+

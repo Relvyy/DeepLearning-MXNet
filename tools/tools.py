@@ -105,3 +105,11 @@ def show_trace_2d(f, results):
 
     plt.show()
 
+def show_loss(epoch, ls):
+    plt.rcParams['figure.figsize'] = (5, 3.5)
+    plt.plot(np.linspace(0, epoch, len(ls)), ls)
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.grid()
+
+    plt.show()

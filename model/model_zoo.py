@@ -241,3 +241,8 @@ class Model(nn.HybridBlock):
                       'nin': self.nin(), 'googlenet': self.googlenet(),
                       'resnet': self.resnet(), 'densenet': self.densenet()}
         return model_dict[model_string]
+
+
+def linreg(X, w, b):
+    return nd.dot(X, w) + b
+
