@@ -18,5 +18,8 @@ def test(model_string, r):
 if __name__ == '__main__':
     #test('ResNet', 224)
     #show_trace(gd(0.9))
-    show_trace_2d(f_2d, train_2d(momentum))
+    #show_trace_2d(f_2d, train_2d(momentum))
     #show_trace_2d(f_2d, train_2d(sgd_2d))
+    tr, tt = Tools().download_cifar()
+    imgs = tr[0:100][0]
+    show_image(imgs, 10, 10)

@@ -35,7 +35,7 @@ class Tools():
 
     def load_data_fashion_mnist(self, resize):  # , root=os.path.join('~', '.mxnet', 'datasets', 'fashion-mnist')):
         r = os.getcwd()
-        root = os.path.join(r, 'Datasets', 'fashion-mnist')
+        root = os.path.join(r, 'data', 'fashion-mnist')
         root = os.path.expanduser(root)
         transformer = []
         if resize:
@@ -84,6 +84,16 @@ class Tools():
             os.remove(filename)
         net.save_parameters(filename)
 
+    def download_cifar(self):  # , root=os.path.join('~', '.mxnet', 'datasets', 'fashion-mnist')):
+        r = os.getcwd()
+        root = os.path.join(r, 'data', 'cifar-10')
+        root = os.path.expanduser(root)
+        cifar10_train = gdata.vision.CIFAR10(root=root, train=True)
+        cifar10_test = gdata.vision.CIFAR10(root=root, train=False)
+
+        return cifar10_train, cifar10_test
+
+
 def show_trace(res):
     n = max(abs(min(res)), abs(max(res)), 10)
     f_line = np.arange(-n, n, 0.1)
@@ -96,6 +106,7 @@ def show_trace(res):
 
     plt.show()
 
+
 def show_trace_2d(f, results):
     plt.plot(*zip(*results), '-o', color='#ff7f0e')
     x1, x2 = np.meshgrid(np.arange(-10, 10, 0.05), np.arange(-5.0, 5.0, 0.05))
@@ -105,6 +116,7 @@ def show_trace_2d(f, results):
 
     plt.show()
 
+
 def show_loss(epoch, ls):
     plt.rcParams['figure.figsize'] = (5, 3.5)
     plt.plot(np.linspace(0, epoch, len(ls)), ls)
@@ -112,4 +124,21 @@ def show_loss(epoch, ls):
     plt.ylabel('Loss')
     plt.grid()
 
+    plt.show()
+
+
+def show_image(imgs, rows, cols, scale=2):
+    figsize = (cols * scale, rows * scale)
+    _, axes = plt.subplots(rows, cols, figsize=figsize)
+    for i in range(rows):
+        for j in range(cols):
+            axes[i][j].imshow(imgs[i * cols + j].asnumpy())
+            axes[i][j].axes.get_xaxis().set_visible(False)
+            axes[i][j].axes.get_yaxis().set_visible(False)
+            axes[i][j].spines['right'].set_visible(False)
+            axes[i][j].spines['top'].set_visible(False)
+            axes[i][j].spines['bottom'].set_visible(False)
+            axes[i][j].spines['left'].set_visible(False)
+
+    plt.axis('off')
     plt.show()
