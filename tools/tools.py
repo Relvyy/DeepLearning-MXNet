@@ -7,6 +7,7 @@ from IPython import display
 from matplotlib import pyplot as plt
 from mxnet.gluon import nn, loss as gloss, data as gdata
 from mxnet import nd, autograd, gluon, init
+from mxnet.gluon import utils as gutils
 
 
 class Tools():
@@ -25,7 +26,7 @@ class Tools():
             ctx = mx.cpu()
         return ctx
 
-    def evaluate_accuracy(self, net, data_iter, ctx):
+    def evaluate_accuracy(self, net, data_iter, ctx=mx.cpu(0)):
         accu_sum, n = nd.array([0], ctx=ctx), 0
         for X, y in data_iter:
             X, y = X.as_in_context(ctx), y.as_in_context(ctx).astype('float32')
@@ -127,12 +128,14 @@ def show_loss(epoch, ls):
     plt.show()
 
 
-def show_image(imgs, rows, cols, scale=2):
+def show_image(imgs, labels, rows, cols, scale=2):
     figsize = (cols * scale, rows * scale)
     _, axes = plt.subplots(rows, cols, figsize=figsize)
     for i in range(rows):
         for j in range(cols):
             axes[i][j].imshow(imgs[i * cols + j].asnumpy())
+            if len(labels) != 0:
+                axes[i][j].axes.set_title(labels[i * cols + j])
             axes[i][j].axes.get_xaxis().set_visible(False)
             axes[i][j].axes.get_yaxis().set_visible(False)
             axes[i][j].spines['right'].set_visible(False)
@@ -142,3 +145,45 @@ def show_image(imgs, rows, cols, scale=2):
 
     plt.axis('off')
     plt.show()
+
+
+def aug_apply(img, aug, rows=2, cols=4, scale=1.5):
+    Y = [aug(img) for _ in range(rows * cols)]
+    show_image(Y, [], rows, cols, scale)
+
+
+def try_all_gpus():
+    ctxes = []
+    try:
+        for i in range(20):
+            ctx = mx.gpu(i)
+            _ = nd.array([0], ctx=ctx)
+            ctxes.append(i)
+    except mx.base.MXNetError:
+        pass
+    if not ctxes:
+        ctxes = [mx.cpu()]
+
+    return ctxes
+
+
+def _get_batch(batch, ctx):
+    features, labels = batch
+    if labels.dtype != features.dtype:
+        labels = labels.astype(features.dtype)
+    return (gutils.split_and_load(features, ctx),
+            gutils.split_and_load(labels, ctx), features.shape[0])
+
+def evaluate_accuracy_gpus(data_iter, net, ctx=[mx.cpu()]):
+    if isinstance(ctx, mx.Context):
+        ctx = [ctx]
+    acc_sum, n = nd.array([0]), 0
+    for batch in data_iter:
+        features, labels, _ = _get_batch(batch, ctx)
+        for X, y in zip(features, labels):
+            y = y.astype('float32')
+            acc_sum += (net(X).argmax(axis=1) == y).sum().copyto(mx.cpu())
+            n += y.size
+        acc_sum.wait_to_read()
+
+    return acc_sum.asscalar() / n

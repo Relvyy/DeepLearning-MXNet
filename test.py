@@ -1,6 +1,9 @@
 from tools.tools import *
 from tools.optimal import *
+from dataset.cifar import *
+from dataset.hotdog import *
 from model.model_zoo import *
+from mxnet import image
 
 
 def test(model_string, r):
@@ -20,6 +23,22 @@ if __name__ == '__main__':
     #show_trace(gd(0.9))
     #show_trace_2d(f_2d, train_2d(momentum))
     #show_trace_2d(f_2d, train_2d(sgd_2d))
-    tr, tt = Tools().download_cifar()
-    imgs = tr[0:100][0]
-    show_image(imgs, 10, 10)
+    #txtop()
+    '''
+    route = os.path.join(os.getcwd(), 'data\pictures\cat3.jpg')
+    img = image.imread(route)
+    aug1 = gdata.vision.transforms.RandomColorJitter(brightness=0.5, hue=0.5, contrast=0.5, saturation=0.5)
+    aug2 = gdata.vision.transforms.RandomResizedCrop((200, 200), ratio=(0.5, 2), scale=(0.1, 1))
+    aug3 = gdata.vision.transforms.RandomFlipLeftRight()
+    aug4 = gdata.vision.transforms.RandomFlipTopBottom()
+    augs = gdata.vision.transforms.Compose([aug1, aug2, aug3, aug4])
+    aug_apply(img, augs)
+    
+
+    train, test = get_hotdog()
+    print(len(train))
+    h = [train[i][0] for i in range(8)]
+    n = [train[-i - 1][0] for i in range(8)]
+    show_image(h+n, [], 2, 8)
+    '''
+    print(try_all_gpus())
