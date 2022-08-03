@@ -26,7 +26,7 @@ class Tools():
             ctx = mx.cpu()
         return ctx
 
-    def evaluate_accuracy(self, net, data_iter, ctx=mx.cpu(0)):
+    def evaluate_accuracy(self, net, data_iter, ctx=mx.cpu()):
         accu_sum, n = nd.array([0], ctx=ctx), 0
         for X, y in data_iter:
             X, y = X.as_in_context(ctx), y.as_in_context(ctx).astype('float32')
