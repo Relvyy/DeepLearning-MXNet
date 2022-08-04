@@ -5,12 +5,13 @@ import numpy as np
 import mxnet as mx
 from IPython import display
 from matplotlib import pyplot as plt
+from dataset.normalize import normalize as nm
 from mxnet.gluon import nn, loss as gloss, data as gdata
 from mxnet import nd, autograd, gluon, init
 from mxnet.gluon import utils as gutils
 
 
-class Tools():
+class Tools:
     def __init__(self, **kwargs):
         super(Tools).__init__(**kwargs)
         self.batch_size = 256
@@ -26,7 +27,7 @@ class Tools():
             ctx = mx.cpu()
         return ctx
 
-    def evaluate_accuracy(self, net, data_iter, ctx=mx.cpu()):
+    def evaluate_accuracy(net, data_iter, ctx=mx.cpu()):
         accu_sum, n = nd.array([0], ctx=ctx), 0
         for X, y in data_iter:
             X, y = X.as_in_context(ctx), y.as_in_context(ctx).astype('float32')
@@ -58,13 +59,24 @@ class Tools():
                        'Shirt', 'Sneaker', 'Bag', 'Ankle Boot']
         return [text_labels[int(i)] for i in labels]
 
-    def show_fashion_mnist(self, images, labels, colors, r):
+    def show_fashion_mnist(self, images, labels, colors, r=224):
+        route = os.path.join(os.getcwd(), 'data\hotdog\\train\hotdog')
+        m, s = nm(route)
         _, figs = plt.subplots(1, len(images), figsize=(12, 12))
         for f, img, lab, col in zip(figs, images, labels, colors):
-            f.imshow(img.reshape((r, r)).asnumpy())
+            #f.imshow(img.reshape((r, r)).asnumpy())
+            img = img.asnumpy().transpose(1, 2, 0)
+            img[:, :, 0] = (img[:, :, 0] * s[2] + m[2]) * 255
+            img[:, :, 1] = (img[:, :, 1] * s[1] + m[1]) * 255
+            img[:, :, 2] = (img[:, :, 2] * s[0] + m[0]) * 255
+            f.imshow(img.astype('int'))
             f.set_title(lab, color=col)
             f.axes.get_xaxis().set_visible(False)
             f.axes.get_yaxis().set_visible(False)
+            f.axes.spines['right'].set_visible(False)
+            f.axes.spines['top'].set_visible(False)
+            f.axes.spines['bottom'].set_visible(False)
+            f.axes.spines['left'].set_visible(False)
 
     def test(self, net, test_iter, r):
         for X, y in test_iter:
@@ -78,9 +90,10 @@ class Tools():
         plt.show()
 
     def save(self, net, mode_str, name):
-        if not os.path.exists('runs'):
-            os.makedirs('runs')
-        filename = 'runs\\' + mode_str + '_' + str(name) + '.params'
+        route = os.path.join(os.getcwd(), '..\\runs\\')
+        if not os.path.exists(route):
+            os.makedirs(route)
+        filename = route + mode_str + '_' + str(name) + '.params'
         if os.path.exists(filename):
             os.remove(filename)
         net.save_parameters(filename)
@@ -93,6 +106,20 @@ class Tools():
         cifar10_test = gdata.vision.CIFAR10(root=root, train=False)
 
         return cifar10_train, cifar10_test
+
+    def test_hotdog(self, net, test_iter):
+        n = 9
+        labels = ['no hotdog', 'hotdog']
+        for X, y in test_iter:
+            #print(net(X).argmax(axis=1).asnumpy())
+            true_labels = [labels[i] for i in y.asnumpy()]
+            pred_labels = [labels[i.astype('int')] for i in net(X).argmax(axis=1).asnumpy()]
+
+            titles = ['T:' + true + '\n' + 'P:' + pred for true, pred in zip(true_labels, pred_labels)]
+            color = ['g' if pred == true else 'r' for true, pred in zip(true_labels, pred_labels)]
+            self.show_fashion_mnist(X[0:n], titles[0:n], color[0:n])
+            break
+        plt.show()
 
 
 def show_trace(res):
@@ -187,3 +214,12 @@ def evaluate_accuracy_gpus(data_iter, net, ctx=[mx.cpu()]):
         acc_sum.wait_to_read()
 
     return acc_sum.asscalar() / n
+
+
+def bbox_to_rect(bbox, color):
+    x, y = bbox[0], bbox[1]
+    w = bbox[2] - bbox[0]
+    h = bbox[3] - bbox[1]
+    img = plt.Rectangle(xy=(x, y), width=w, height=h,
+                        fill=False, edgecolor=color, linewidth=2)
+    return img

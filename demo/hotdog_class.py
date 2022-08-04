@@ -1,5 +1,6 @@
+import sys
 import mxnet.profiler
-
+from tqdm import tqdm
 from dataset.hotdog import *
 from tools.tools import *
 from dataset.normalize import normalize as nm
@@ -8,14 +9,16 @@ from mxnet.gluon import loss as gloss
 from mxnet.gluon import data as gdata, model_zoo as mz
 from tools.tools import _get_batch
 
+sys.path.append(r'f:\Documents\DeeplLearning\DeepLearning-MXNet\demo')
 
 def train(train_iter, test_iter, net, loss, trainer, ctx, num_epochs):
     print('Training On: ', ctx)
     if isinstance(ctx, mxnet.Context):
         ctx = [ctx]
-    for epoch in range(num_epochs):
+    for epoch in tqdm(range(num_epochs)):
+        best = 1e5
         train_l_sum, train_accu_sum, n, m, start = 0.0, 0.0, 0, 0, time.time()
-        for i, batch in enumerate(train_iter):
+        for i, batch in tqdm(enumerate(train_iter)):
             Xs, ys, batch_size = _get_batch(batch, ctx)
             ls = []
             with autograd.record():
@@ -29,8 +32,12 @@ def train(train_iter, test_iter, net, loss, trainer, ctx, num_epochs):
             train_accu_sum += sum([(y_hat.argmax(axis=1) == y).sum().asscalar() for y_hat, y in zip(y_hats, ys)])
             m += sum([y.size for y in ys])
         test_acc = evaluate_accuracy_gpus(test_iter, net, ctx)
+        if test_acc < best:
+            best = test_acc
+            Tools().save(net, 'finetune_resnet18v2', 'best')
         print('Epoch %d, Loss: %.4f, Train Acc %.3f, Test Acc: %.3f, Time: %.2f sec' % (
             epoch + 1, train_l_sum / n, train_accu_sum / m, test_acc, time.time() - start))
+    Tools().save(net, 'finetune_resnet18v2', 'last')
 
 
 
@@ -47,9 +54,10 @@ def train_finetune(net, lr, train_augs, test_augs, bs=128, num_epoch=5):
 
 
 
-def train_ft():
-    root = os.path.join(os.getcwd(), '..\model')
-    route = os.path.join(os.getcwd(), '..\data\hotdog\\train\hotdog')
+def model():
+    print(os.getcwd())
+    root = os.path.join(os.getcwd(), 'model')
+    route = os.path.join(os.getcwd(), 'data\hotdog\\train\hotdog')
     m, s = nm(route)
     normalize = gdata.vision.transforms.Normalize(m, s)
 
@@ -72,9 +80,9 @@ def train_ft():
     finetune_net.output.initialize(init.Xavier())
     finetune_net.output.collect_params().setattr('lr_mult', 10)
 
-    train_finetune(finetune_net, 0.01, train_augs, test_augs)
-    print(finetune_net)
+    return finetune_net, train_augs, test_augs
 
 
 if __name__ == '__main__':
-    train_ft()
+    model, train_augs, test_augs = model()
+    train_finetune(model, 0.01, train_augs, test_augs)

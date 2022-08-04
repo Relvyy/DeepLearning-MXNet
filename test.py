@@ -4,18 +4,22 @@ from dataset.cifar import *
 from dataset.hotdog import *
 from model.model_zoo import *
 from mxnet import image
+from demo.hotdog_class import model as m
 
 
-def test(model_string, r):
+def test(model_string, r=224):
     models = Model()
     tool = Tools()
     tool.try_gpu()
 
-    model = models.model(model_string),
-    model.initialize()
-    model.load_parameters(f'.\\runs\\{model_string}_best.params')
-    _, test_iter = tool.load_data_fashion_mnist(resize=r)
-    tool.test(model, test_iter, r)
+    #model = models.model(model_string)
+    #model.initialize()
+    model, _, test_augs = m()
+    train_imgs, test_imgs = get_hotdog()
+    test_iter = gdata.DataLoader(test_imgs.transform_first(test_augs), batch_size=128, shuffle=True)
+    model.load_parameters(f'.\demo\\runs\\{model_string}_best.params')
+    #_, test_iter = tool.load_data_fashion_mnist(resize=r)
+    tool.test_hotdog(model, test_iter)
 
 
 if __name__ == '__main__':
@@ -40,5 +44,7 @@ if __name__ == '__main__':
     h = [train[i][0] for i in range(8)]
     n = [train[-i - 1][0] for i in range(8)]
     show_image(h+n, [], 2, 8)
-    '''
+    
     print(try_all_gpus())
+    '''
+    test('finetune_resnet18v2')
