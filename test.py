@@ -3,7 +3,7 @@ from tools.optimal import *
 from dataset.cifar import *
 from dataset.hotdog import *
 from model.model_zoo import *
-from mxnet import image
+from mxnet import image, contrib
 from demo.hotdog_class import model as m
 
 
@@ -46,5 +46,20 @@ if __name__ == '__main__':
     show_image(h+n, [], 2, 8)
     
     print(try_all_gpus())
-    '''
     test('finetune_resnet18v2')
+    '''
+    img = image.imread(r'd:\Documents\DeeplLearning\DeepLearning-MXNet\data\pictures\catdog.jpg').asnumpy()
+    fig = plt.imshow(img)
+    h, w = img.shape[0:2]
+    X = nd.random.uniform(shape=(1, 3, w, h))
+    Y = contrib.nd.MultiBoxPrior(X, sizes=[0.75, 0.5, 0.25], ratios=[1, 2, 0.5])
+    boxes = Y.reshape(h, w, 5, 4)
+
+    scale = nd.array((w, h, w, h))
+    for i in range(30, 36):
+        for j in range(30, 36):
+            show_bboxes(fig.axes, boxes[i, j, :, :]*scale, ['s=0.75, r=1', 's=0.5, r=1', 's=0.25, r=1',
+                                                        's=0.75, r=2', 's=0.75, r=0.5'])
+
+    plt.show()
+

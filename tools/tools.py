@@ -62,14 +62,34 @@ class Tools:
     def show_fashion_mnist(self, images, labels, colors, r=224):
         route = os.path.join(os.getcwd(), 'data\hotdog\\train\hotdog')
         m, s = nm(route)
-        _, figs = plt.subplots(1, len(images), figsize=(12, 12))
+        cols = (np.ceil(np.sqrt(len(images)))).astype(np.int)
+        rows = (np.ceil(len(images) // cols)).astype(np.int)
+        _, figs = plt.subplots(rows, cols, figsize=(12, 12))
+        for i in range(rows):
+            for j in range(cols):
+                if i * cols + j == len(images):
+                    break
+                imgs = images[i * cols + j]
+                img = imgs.asnumpy().transpose(1, 2, 0)
+                img[:, :, 0] = (img[:, :, 0] * s[0] + m[0]) * 255
+                img[:, :, 1] = (img[:, :, 1] * s[1] + m[1]) * 255
+                img[:, :, 2] = (img[:, :, 2] * s[2] + m[2]) * 255
+                figs[i][j].imshow(img.astype(np.uint8))
+                figs[i][j].axes.set_title(labels[i * cols + j], color=colors[i * cols + j])
+                figs[i][j].axes.get_xaxis().set_visible(False)
+                figs[i][j].axes.get_yaxis().set_visible(False)
+                figs[i][j].spines['right'].set_visible(False)
+                figs[i][j].spines['top'].set_visible(False)
+                figs[i][j].spines['bottom'].set_visible(False)
+                figs[i][j].spines['left'].set_visible(False)
+        '''
         for f, img, lab, col in zip(figs, images, labels, colors):
             #f.imshow(img.reshape((r, r)).asnumpy())
             img = img.asnumpy().transpose(1, 2, 0)
-            img[:, :, 0] = (img[:, :, 0] * s[2] + m[2]) * 255
+            img[:, :, 0] = (img[:, :, 0] * s[0] + m[0]) * 255
             img[:, :, 1] = (img[:, :, 1] * s[1] + m[1]) * 255
-            img[:, :, 2] = (img[:, :, 2] * s[0] + m[0]) * 255
-            f.imshow(img.astype('int'))
+            img[:, :, 2] = (img[:, :, 2] * s[2] + m[2]) * 255
+            f.imshow(img.astype(np.uint8))
             f.set_title(lab, color=col)
             f.axes.get_xaxis().set_visible(False)
             f.axes.get_yaxis().set_visible(False)
@@ -77,6 +97,7 @@ class Tools:
             f.axes.spines['top'].set_visible(False)
             f.axes.spines['bottom'].set_visible(False)
             f.axes.spines['left'].set_visible(False)
+        '''
 
     def test(self, net, test_iter, r):
         for X, y in test_iter:
@@ -108,7 +129,7 @@ class Tools:
         return cifar10_train, cifar10_test
 
     def test_hotdog(self, net, test_iter):
-        n = 9
+        n = 25
         labels = ['no hotdog', 'hotdog']
         for X, y in test_iter:
             #print(net(X).argmax(axis=1).asnumpy())
@@ -223,3 +244,23 @@ def bbox_to_rect(bbox, color):
     img = plt.Rectangle(xy=(x, y), width=w, height=h,
                         fill=False, edgecolor=color, linewidth=2)
     return img
+
+
+def show_bboxes(axes, bboxes, labels=None, colors=None):
+    def _make_list(obj, default_values=None):
+        if obj is None:
+            obj = default_values
+        elif not isinstance(obj, (list, tuple)):
+            obj = [obj]
+        return obj
+
+    labels = _make_list(labels)
+    colors = _make_list(colors, ['b', 'g', 'r', 'k', 'm', 'c'])
+    for i, box in enumerate(bboxes):
+        color = colors[i % len(colors)]
+        rect = bbox_to_rect(box.asnumpy(), color)
+        axes.add_patch(rect)
+        if labels and len(labels) > 1:
+            text_color = 'k' if color == 'w' else 'w'
+            axes.text(rect.xy[0], rect.xy[1], labels[i], va='center', ha='center', fontsize=9,
+                      color=text_color, bbox=dict(facecolor=color, lw=0))
